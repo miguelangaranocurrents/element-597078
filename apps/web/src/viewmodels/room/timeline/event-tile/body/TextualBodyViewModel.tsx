@@ -285,6 +285,11 @@ export class TextualBodyViewModel
             return;
         }
 
+        // User pills open the profile in the right panel from their own click handler, so don't navigate away
+        if (target.classList?.contains("mx_UserPill")) {
+            return;
+        }
+
         const localHref = tryTransformPermalinkToLocalHref(target.href);
         if (localHref !== target.href) {
             event.preventDefault();
