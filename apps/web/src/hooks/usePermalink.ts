@@ -6,13 +6,14 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import { type MatrixEvent, type Room, type RoomMember } from "matrix-js-sdk/src/matrix";
+import { type MatrixEvent, type Room, type RoomMember, User } from "matrix-js-sdk/src/matrix";
 
 import { type ButtonEvent } from "../components/views/elements/AccessibleButton";
 import { PillType } from "../components/views/elements/PillType";
 import { parsePermalink } from "../utils/permalinks/Permalinks";
 import dis from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
+import { type ViewUserPayload } from "../dispatcher/payloads/ViewUserPayload";
 import { type PermalinkParts } from "../utils/permalinks/PermalinkConstructor";
 import { _t } from "../languageHandler";
 import { usePermalinkTargetRoom } from "./usePermalinkTargetRoom";
@@ -142,14 +143,16 @@ export const usePermalink: (args: Args) => HookResult = ({
 
     if (type === PillType.AtRoomMention && permalinkRoom) {
         text = "@room";
-    } else if (type === PillType.UserMention && member) {
-        text = member.name || resourceId;
+    } else if (type === PillType.UserMention && resourceId) {
+        const userId = resourceId;
+        text = member?.name || userId;
+        // Always intercept the click, even while the member is still loading, so the anchor never navigates away
         onClick = (e: ButtonEvent): void => {
             e.preventDefault();
             e.stopPropagation();
-            dis.dispatch({
+            dis.dispatch<ViewUserPayload>({
                 action: Action.ViewUser,
-                member: member,
+                member: member ?? new User(userId),
             });
         };
     } else if (type === PillType.RoomMention) {
